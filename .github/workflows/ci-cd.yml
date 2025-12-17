@@ -5,7 +5,23 @@ on:
     branches: [ "main" ]
 
 jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run Tests
+        run: go test -v ./...
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,7 +40,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest, ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:${{ github.sha }}
 
-  # This 'deploy' section is the "edit" or addition we are making
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -38,8 +53,15 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "🚀 Starting deployment..."
+            # 1. Pull the new image
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest
+            
+            # 2. Stop and remove the old container
             docker stop go-web-app-container || true
             docker rm go-web-app-container || true
-            docker run -d -p 80:8080 --name go-web-app-container ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest
+            
+            # 3. Run the new container
+            # UPDATED: Using port 8080:8080 so it works behind Nginx
+            docker run -d -p 8080:8080 --name go-web-app-container ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest
+            
             echo "✅ Deployment successful!"
