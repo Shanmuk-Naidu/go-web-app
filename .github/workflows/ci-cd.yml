@@ -51,17 +51,17 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
           script: |
             echo "🚀 Starting deployment..."
-            # 1. Pull the new image
+            
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest
             
-            # 2. Stop and remove the old container
-            docker stop go-web-app-container || true
-            docker rm go-web-app-container || true
+            docker stop go-web-app || true
+            docker rm go-web-app || true
             
-            # 3. Run the new container
-            # UPDATED: Using port 8080:8080 so it works behind Nginx
-            docker run -d -p 8080:8080 --name go-web-app-container ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest
+            docker run -d -p 8080:8080 --name go-web-app ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:latest
+            
+            docker image prune -f
             
             echo "✅ Deployment successful!"
