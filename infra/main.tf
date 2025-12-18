@@ -64,10 +64,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "app_server" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
-  
-  # Your Key Pair Name
-  key_name      = "Ubuntu-kp" 
-
+  key_name      = "Ubuntu-kp"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
@@ -76,29 +73,33 @@ resource "aws_instance" "app_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              # 1. Update and install Docker
               sudo apt-get update -y
-              sudo apt-get install -y docker.io
-              
-              # 2. Start Docker Service
+              sudo apt-get install -y docker.io nginx
               sudo systemctl start docker
               sudo systemctl enable docker
               sudo usermod -aG docker ubuntu
-
-              # 3. Pull and Run Your App
-              # Retries added in case network is slow on startup
+              sudo bash -c 'cat > /etc/nginx/sites-available/default <<EOT
+              server {
+                  listen 80;
+                  location / {
+                      proxy_pass http://localhost:8080;
+                      proxy_set_header Host \$host;
+                      proxy_set_header X-Real-IP \$remote_addr;
+                  }
+              }
+              EOT'
+              sudo systemctl restart nginx
               until sudo docker run -d -p 8080:8080 --name go-web-app shanmuk9/go-web-app:latest; do
-                echo "Retrying Docker run..."
                 sleep 5
               done
               EOF
 }
 
-output "public_ip" {
-  value = aws_eip.static_ip.public_ip
-}
-
 resource "aws_eip" "static_ip" {
   instance = aws_instance.app_server.id
   vpc      = true
+}
+
+output "public_ip" {
+  value = aws_eip.static_ip.public_ip
 }
