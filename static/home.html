@@ -4,53 +4,26 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Home - DevOps with Shanmuk</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+        /* --- YOUR ORIGINAL STYLES --- */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        header { background-color: #333; color: #fff; padding: 10px 0; text-align: center; }
+        nav ul { list-style-type: none; padding: 0; }
+        nav ul li { display: inline; margin-right: 10px; }
+        nav ul li a { color: #fff; text-decoration: none; font-weight: bold; }
+        main { padding: 20px; max-width: 800px; margin: 0 auto; padding-bottom: 60px; }
+        section { margin-bottom: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        footer { background-color: #333; color: #fff; text-align: center; padding: 10px 0; position: fixed; bottom: 0; width: 100%; }
 
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
-        }
-
-        nav ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        nav ul li {
-            display: inline;
-            margin-right: 10px;
-        }
-
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-        }
-
-        main {
-            padding: 20px;
-        }
-
-        section {
-            margin-bottom: 20px;
-        }
-
-        footer {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
+        /* --- NEW DASHBOARD STYLES --- */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .stat-box { background: #eef2f3; padding: 10px; border-radius: 5px; border-left: 4px solid #27ae60; }
+        .stat-label { font-size: 0.85em; color: #7f8c8d; text-transform: uppercase; }
+        .stat-value { font-size: 1.2em; font-weight: bold; color: #2c3e50; }
+        .refresh-btn { background-color: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .refresh-btn:hover { background-color: #1f618d; }
+        .server-time { font-size: 0.8em; color: #95a5a6; margin-top: 10px; text-align: right; }
     </style>    
 </head>
 <body>
@@ -68,14 +41,41 @@
     <main>
         <section>
             <h1>Learn DevOps from Shanmuk.</h1>
-            <p>The main purpose of this website is to guide people on how to learn DevOps 
-                from basics for Free.
-            </p>
+            <p>The main purpose of this website is to guide people on how to learn DevOps from basics for Free.</p>
+        </section>
+
+        <section style="border-top: 4px solid #3498db;">
+            <h2 style="margin-top:0;">🔴 Live Server Status</h2>
+            <p>This data is being pulled directly from the AWS EC2 instance hosting this page.</p>
+            
+            <div class="dashboard-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Operating System</div>
+                    <div class="stat-value">{{.OS}}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Architecture</div>
+                    <div class="stat-value">{{.Arch}}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Memory Usage</div>
+                    <div class="stat-value">{{.MemoryAlloc}}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Active Goroutines</div>
+                    <div class="stat-value">{{.NumGoroutine}}</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <button class="refresh-btn" onclick="window.location.reload();">Refresh Data</button>
+                <div class="server-time">Server Time: {{.Time}}</div>
+            </div>
         </section>
 
         <section>
             <h2>Overview</h2>
-            <p> Zero to Hero courses on all DevOps tools and popular Cloud(AWS and Azure) platform</p>
+            <p>Zero to Hero courses on all DevOps tools and popular Cloud (AWS and Azure) platforms.</p>
         </section>
 
         <section>
@@ -85,7 +85,7 @@
     </main>
 
     <footer>
-        <p>&copy; Abhishek.Veeramalla</p>
+        <p>&copy; @Shanmuk</p>
     </footer>
 </body>
 </html>

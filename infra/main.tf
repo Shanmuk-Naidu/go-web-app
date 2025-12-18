@@ -94,6 +94,11 @@ resource "aws_instance" "app_server" {
               EOF
 }
 
-output "instance_ip" {
-  value = aws_instance.app_server.public_ip
+output "public_ip" {
+  value = aws_eip.static_ip.public_ip
+}
+
+resource "aws_eip" "static_ip" {
+  instance = aws_instance.app_server.id
+  vpc      = true
 }

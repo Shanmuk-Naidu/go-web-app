@@ -1,39 +1,48 @@
 package main
 
 import (
-	"log"
-	"net/http"
+    "fmt"
+    "html/template"
+    "net/http"
+    "runtime"
+    "time"
 )
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	// Render the home html page from static folder
-	http.ServeFile(w, r, "static/home.html")
+// Define a struct to hold the data we send to the HTML page
+type PageData struct {
+    Time         string
+    OS           string
+    Arch         string
+    MemoryAlloc  string
+    NumGoroutine int
 }
 
-func coursePage(w http.ResponseWriter, r *http.Request) {
-	// Render the course html page
-	http.ServeFile(w, r, "static/courses.html")
-}
+func handler(w http.ResponseWriter, r *http.Request) {
+    // 1. Get Memory Stats
+    var m runtime.MemStats
+    runtime.ReadMemStats(&m)
 
-func aboutPage(w http.ResponseWriter, r *http.Request) {
-	// Render the about html page
-	http.ServeFile(w, r, "static/about.html")
-}
+    // 2. Prepare the data
+    data := PageData{
+        Time:         time.Now().Format("2006-01-02 15:04:05"),
+        OS:           runtime.GOOS,
+        Arch:         runtime.GOARCH,
+        // Convert bytes to Megabytes (MB)
+        MemoryAlloc:  fmt.Sprintf("%d MB", m.Alloc/1024/1024),
+        NumGoroutine: runtime.NumGoroutine(),
+    }
 
-func contactPage(w http.ResponseWriter, r *http.Request) {
-	// Render the contact html page
-	http.ServeFile(w, r, "static/contact.html")
+    // 3. Parse the template (UPDATED: pointing to home.html)
+    tmpl, err := template.ParseFiles("static/home.html")
+    if err != nil {
+        http.Error(w, "Could not load template", http.StatusInternalServerError)
+        return
+    }
+    tmpl.Execute(w, data)
 }
 
 func main() {
-
-	http.HandleFunc("/home", homePage)
-	http.HandleFunc("/courses", coursePage)
-	http.HandleFunc("/about", aboutPage)
-	http.HandleFunc("/contact", contactPage)
-
-	err := http.ListenAndServe("0.0.0.0:8080", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+    http.HandleFunc("/", handler)
+    fmt.Println("Server is running on port 8080...")
+    http.ListenAndServe(":8080", nil)
 }
