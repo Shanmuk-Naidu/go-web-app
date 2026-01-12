@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var startTime time.Time
+
 // Define a struct to hold the data for the Dashboard
 type PageData struct {
 	Time         string
@@ -16,6 +18,7 @@ type PageData struct {
 	MemoryAlloc  string
 	NumGoroutine int
 	NumCPU       int
+	Uptime       string
 }
 
 // Handler for the Dashboard (Home Page)
@@ -39,6 +42,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		MemoryAlloc:  fmt.Sprintf("%d MB", m.Alloc/1024/1024),
 		NumGoroutine: runtime.NumGoroutine(),
 		NumCPU:       runtime.NumCPU(),
+		Uptime:       time.Since(startTime).Round(time.Second).String(),
 	}
 
 	// 3. Parse and execute the template
@@ -58,6 +62,7 @@ func staticHandler(filename string) http.HandlerFunc {
 }
 
 func main() {
+	startTime = time.Now()
 	// Route 1: The Dashboard (Home)
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/home", homeHandler)
