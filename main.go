@@ -20,7 +20,7 @@ type PageData struct {
 	NumGoroutine  int
 	NumCPU        int
 	Uptime        string
-	EstimatedCost string // <--- NEW: Real-time cost tracking
+	EstimatedCost string
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +32,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	// Get the Container ID (Hostname)
 	hostname, _ := os.Hostname()
 
 	// Cost Calculation: t2.micro is approx $0.0116/hour
@@ -40,8 +39,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	hours := duration.Hours()
 	cost := hours * 0.0116
 
+	// FIX: Define the location BEFORE the struct
+	loc := time.FixedZone("IST", 5.5*60*60) // +5:30 offset
+
 	data := PageData{
-		Time:          time.Now().Format("15:04:05 Mon, 02 Jan"),
+		// FIX: Use .In(loc) to apply the timezone
+		Time:          time.Now().In(loc).Format("15:04:05 Mon, 02 Jan"),
 		Hostname:      hostname,
 		OS:            runtime.GOOS,
 		Arch:          runtime.GOARCH,
@@ -49,7 +52,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		NumGoroutine:  runtime.NumGoroutine(),
 		NumCPU:        runtime.NumCPU(),
 		Uptime:        duration.Round(time.Second).String(),
-		EstimatedCost: fmt.Sprintf("$%.4f", cost), // Format to 4 decimal places
+		EstimatedCost: fmt.Sprintf("$%.4f", cost),
 	}
 
 	tmpl, err := template.ParseFiles("static/home.html")
@@ -63,10 +66,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	startTime = time.Now()
 
-	// We only need the home route now. The "website" is gone.
 	http.HandleFunc("/", homeHandler)
 
-	// Serve static assets (CSS/JS if we add them later)
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 

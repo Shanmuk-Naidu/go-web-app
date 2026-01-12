@@ -45,16 +45,22 @@
         
         /* Footer info */
         .server-info { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Modal Styles (Pop-up) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--panel-dark); padding: 20px; border-radius: 8px; width: 500px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .log-entry { font-family: monospace; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); border-bottom: 1px solid #334155; padding-bottom: 2px; }
+        .close-btn { background: var(--accent); color: white; border: none; padding: 5px 10px; cursor: pointer; float: right; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <aside class="sidebar">
         <div class="logo">⚡ Cloud<span>Commander</span></div>
-        <div class="menu-item active">Dashboard</div>
-        <div class="menu-item">Infrastructure</div>
-        <div class="menu-item">Logs</div>
-        <div class="menu-item">Settings</div>
+        <div class="menu-item active" onclick="showSection('dashboard')">Dashboard</div>
+        <div class="menu-item" onclick="window.open('https://github.com/Shanmuk-Naidu/go-web-app', '_blank')">Infrastructure</div>
+        <div class="menu-item" onclick="openLogs()">Logs</div>
+        <div class="menu-item" onclick="toggleTheme()">Settings (Theme)</div>
     </aside>
 
     <section class="main-content">
@@ -109,5 +115,60 @@
         </div>
     </section>
 
+    <div id="logModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeLogs()">Close</button>
+            <h3 style="margin-top: 0; color: white;">System Logs</h3>
+            <div id="logContainer" style="max-height: 300px; overflow-y: auto;">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Theme Toggle Logic
+        function toggleTheme() {
+            const body = document.body;
+            const currentAccent = getComputedStyle(body).getPropertyValue('--accent').trim();
+            
+            // Toggle between Blue (#3b82f6) and Matrix Green (#10b981)
+            if (currentAccent === '#10b981') {
+                body.style.setProperty('--accent', '#3b82f6'); 
+                alert("Theme: Professional Blue");
+            } else {
+                body.style.setProperty('--accent', '#10b981'); 
+                alert("Theme: Matrix Green");
+            }
+        }
+
+        // 2. Log System Logic
+        function openLogs() {
+            document.getElementById('logModal').style.display = 'flex';
+            const container = document.getElementById('logContainer');
+            container.innerHTML = ''; // Clear old logs
+            
+            // Simulate reading logs from server
+            const logs = [
+                "[INFO] System Boot Sequence Initiated...",
+                "[INFO] Loading Kernel: {{.OS}} / {{.Arch}}",
+                "[INFO] Connected to AWS EC2 (ap-south-1)",
+                "[INFO] Docker Container ID: {{.Hostname}}", 
+                "[INFO] Memory Allocation: {{.MemoryAlloc}}",
+                "[SUCCESS] HTTP Server running on :8080"
+            ];
+
+            logs.forEach((log, index) => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.textContent = `> ${new Date().toLocaleTimeString()} ${log}`;
+                    container.appendChild(div);
+                }, index * 200); // Stagger the logs for effect
+            });
+        }
+
+        function closeLogs() {
+            document.getElementById('logModal').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
