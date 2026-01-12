@@ -2,98 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="5">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - DevOps with Shanmuk</title>
+    <meta http-equiv="refresh" content="5"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Commander</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* --- YOUR ORIGINAL STYLES --- */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        header { background-color: #333; color: #fff; padding: 10px 0; text-align: center; }
-        nav ul { list-style-type: none; padding: 0; }
-        nav ul li { display: inline; margin-right: 10px; }
-        nav ul li a { color: #fff; text-decoration: none; font-weight: bold; }
-        main { padding: 20px; max-width: 800px; margin: 0 auto; padding-bottom: 60px; }
-        section { margin-bottom: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        footer { background-color: #333; color: #fff; text-align: center; padding: 10px 0; position: fixed; bottom: 0; width: 100%; }
+        :root {
+            --bg-dark: #0f172a;
+            --panel-dark: #1e293b;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
 
-        /* --- NEW DASHBOARD STYLES --- */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .stat-box { background: #eef2f3; padding: 10px; border-radius: 5px; border-left: 4px solid #27ae60; }
-        .stat-label { font-size: 0.85em; color: #7f8c8d; text-transform: uppercase; }
-        .stat-value { font-size: 1.2em; font-weight: bold; color: #2c3e50; }
-        .refresh-btn { background-color: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-        .refresh-btn:hover { background-color: #1f618d; }
-        .server-time { font-size: 0.8em; color: #95a5a6; margin-top: 10px; text-align: right; }
-    </style>    
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 250px; background-color: #020617; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #334155; }
+        .logo { font-size: 1.2rem; font-weight: 600; color: white; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        .logo span { color: var(--accent); }
+        .menu-item { padding: 12px; margin-bottom: 5px; border-radius: 6px; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+        .menu-item:hover, .menu-item.active { background-color: var(--panel-dark); color: white; }
+        .active { border-left: 3px solid var(--accent); }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .status-badge { background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+
+        /* Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        
+        /* Cards */
+        .card { background-color: var(--panel-dark); padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+        .card h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-muted); font-weight: 400; }
+        .metric { font-size: 1.8rem; font-weight: 600; }
+        .sub-metric { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
+
+        /* Cost Card Specifics */
+        .cost-card { border-left: 4px solid var(--warning); }
+        
+        /* Footer info */
+        .server-info { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; font-size: 0.8rem; color: var(--text-muted); }
+    </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="home">Home</a></li>
-                <li><a href="about">About</a></li>
-                <li><a href="contact">Contact</a></li>
-                <li><a href="courses">Courses</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <main>
-        <section>
-            <h1>Learn DevOps from Shanmuk.</h1>
-            <p>The main purpose of this website is to guide people on how to learn DevOps from basics for Free.</p>
-        </section>
+    <aside class="sidebar">
+        <div class="logo">⚡ Cloud<span>Commander</span></div>
+        <div class="menu-item active">Dashboard</div>
+        <div class="menu-item">Infrastructure</div>
+        <div class="menu-item">Logs</div>
+        <div class="menu-item">Settings</div>
+    </aside>
 
-        <section style="border-top: 4px solid #3498db;">
-            <h2 style="margin-top:0;">🔴 Live Server Status</h2>
-            <p>This data is being pulled directly from the AWS EC2 instance hosting this page.</p>
-            
-            <div class="dashboard-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Operating System</div>
-                    <div class="stat-value">{{.OS}}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Architecture</div>
-                    <div class="stat-value">{{.Arch}}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Memory Usage</div>
-                    <div class="stat-value">{{.MemoryAlloc}}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Active Goroutines</div>
-                    <div class="stat-value">{{.NumGoroutine}}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">CPU Cores</div>
-                    <div class="stat-value">{{.NumCPU}}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">System Uptime</div>
-                    <div class="stat-value">{{.Uptime}}</div>
-                </div>
+    <section class="main-content">
+        <div class="header">
+            <div>
+                <h1 style="margin:0;">Infrastructure Overview</h1>
+                <p style="margin:5px 0 0 0; color: var(--text-muted);">Real-time metrics from AWS EC2 (ap-south-1)</p>
+            </div>
+            <div class="status-badge">● System Online</div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>SESSION UPTIME</h3>
+                <div class="metric">{{.Uptime}}</div>
+                <div class="sub-metric">Since reboot</div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <button class="refresh-btn" onclick="window.location.reload();">Refresh Data</button>
-                <div class="server-time">Server Time: {{.Time}}</div>
+            <div class="card cost-card">
+                <h3>SESSION COST (EST.)</h3>
+                <div class="metric">{{.EstimatedCost}}</div>
+                <div class="sub-metric">Based on t2.micro pricing</div>
             </div>
-        </section>
 
-        <section>
-            <h2>Overview</h2>
-            <p>Zero to Hero courses on all DevOps tools and popular Cloud (AWS and Azure) platforms.</p>
-        </section>
+            <div class="card">
+                <h3>CPU CORES</h3>
+                <div class="metric">{{.NumCPU}}</div>
+                <div class="sub-metric">{{.Arch}} Architecture</div>
+            </div>
 
-        <section>
-            <h2>Courses Offered</h2>
-            <p>Please look at the <a href="courses">courses</a> section.</p>  
-        </section>
-    </main>
+            <div class="card">
+                <h3>MEMORY USAGE</h3>
+                <div class="metric">{{.MemoryAlloc}}</div>
+                <div class="sub-metric">Active Allocation</div>
+            </div>
 
-    <footer>
-        <p>&copy; @Shanmuk</p>
-    </footer>
+            <div class="card">
+                <h3>ACTIVE GOROUTINES</h3>
+                <div class="metric">{{.NumGoroutine}}</div>
+                <div class="sub-metric">Concurrent processes</div>
+            </div>
+
+             <div class="card">
+                <h3>OPERATING SYSTEM</h3>
+                <div class="metric" style="font-size: 1.4rem;">{{.OS}}</div>
+                <div class="sub-metric">Hostname: {{.Hostname}}</div>
+            </div>
+        </div>
+
+        <div class="server-info">
+            Last Updated: {{.Time}} | Server Region: ap-south-1 | Managed by Terraform
+        </div>
+    </section>
+
 </body>
 </html>

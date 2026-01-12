@@ -4,75 +4,72 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"runtime"
 	"time"
 )
 
 var startTime time.Time
 
-// Define a struct to hold the data for the Dashboard
 type PageData struct {
-	Time         string
-	OS           string
-	Arch         string
-	MemoryAlloc  string
-	NumGoroutine int
-	NumCPU       int
-	Uptime       string
+	Time          string
+	Hostname      string
+	OS            string
+	Arch          string
+	MemoryAlloc   string
+	NumGoroutine  int
+	NumCPU        int
+	Uptime        string
+	EstimatedCost string // <--- NEW: Real-time cost tracking
 }
 
-// Handler for the Dashboard (Home Page)
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	// If the URL path is NOT exactly "/", serve a 404 (or handle specific files)
-	// This prevents "/random" from loading the dashboard
-	if r.URL.Path != "/" && r.URL.Path != "/home" {
+	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 
-	// 1. Get Memory Stats
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	// 2. Prepare the data
+	// Get the Container ID (Hostname)
+	hostname, _ := os.Hostname()
+
+	// Cost Calculation: t2.micro is approx $0.0116/hour
+	duration := time.Since(startTime)
+	hours := duration.Hours()
+	cost := hours * 0.0116
+
 	data := PageData{
-		Time:         time.Now().Format("2006-01-02 15:04:05"),
-		OS:           runtime.GOOS,
-		Arch:         runtime.GOARCH,
-		MemoryAlloc:  fmt.Sprintf("%d MB", m.Alloc/1024/1024),
-		NumGoroutine: runtime.NumGoroutine(),
-		NumCPU:       runtime.NumCPU(),
-		Uptime:       time.Since(startTime).Round(time.Second).String(),
+		Time:          time.Now().Format("15:04:05 Mon, 02 Jan"),
+		Hostname:      hostname,
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		MemoryAlloc:   fmt.Sprintf("%d MB", m.Alloc/1024/1024),
+		NumGoroutine:  runtime.NumGoroutine(),
+		NumCPU:        runtime.NumCPU(),
+		Uptime:        duration.Round(time.Second).String(),
+		EstimatedCost: fmt.Sprintf("$%.4f", cost), // Format to 4 decimal places
 	}
 
-	// 3. Parse and execute the template
 	tmpl, err := template.ParseFiles("static/home.html")
 	if err != nil {
-		http.Error(w, "Could not load home template", http.StatusInternalServerError)
+		http.Error(w, "Could not load template", http.StatusInternalServerError)
 		return
 	}
 	tmpl.Execute(w, data)
 }
 
-// Helper function to serve simple static pages
-func staticHandler(filename string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/"+filename)
-	}
-}
-
 func main() {
 	startTime = time.Now()
-	// Route 1: The Dashboard (Home)
+
+	// We only need the home route now. The "website" is gone.
 	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/home", homeHandler)
 
-	// Route 2: The Other Pages (Restoring your links)
-	// Assuming your files are named about.html, contact.html, courses.html
-	http.HandleFunc("/about", staticHandler("about.html"))
-	http.HandleFunc("/contact", staticHandler("contact.html"))
-	http.HandleFunc("/courses", staticHandler("courses.html"))
+	// Serve static assets (CSS/JS if we add them later)
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	fmt.Println("Server is running on port 8080...")
+	fmt.Println("Cloud Commander is running on port 8080...")
 	http.ListenAndServe(":8080", nil)
 }
