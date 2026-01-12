@@ -15,6 +15,7 @@ type PageData struct {
 	Arch         string
 	MemoryAlloc  string
 	NumGoroutine int
+	NumCPU       int
 }
 
 // Handler for the Dashboard (Home Page)
@@ -37,6 +38,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		Arch:         runtime.GOARCH,
 		MemoryAlloc:  fmt.Sprintf("%d MB", m.Alloc/1024/1024),
 		NumGoroutine: runtime.NumGoroutine(),
+		NumCPU:       runtime.NumCPU(),
 	}
 
 	// 3. Parse and execute the template
