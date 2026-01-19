@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="5"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="5"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Commander</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -40,6 +41,10 @@
         .metric { font-size: 1.8rem; font-weight: 600; }
         .sub-metric { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
 
+        /* Visual Progress Bar */
+        .progress-container { background: #334155; border-radius: 6px; height: 10px; width: 100%; margin-top: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); transition: width 0.5s ease; }
+
         /* Cost Card Specifics */
         .cost-card { border-left: 4px solid var(--warning); }
         
@@ -51,6 +56,13 @@
         .modal-content { background: var(--panel-dark); padding: 20px; border-radius: 8px; width: 500px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .log-entry { font-family: monospace; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); border-bottom: 1px solid #334155; padding-bottom: 2px; }
         .close-btn { background: var(--accent); color: white; border: none; padding: 5px 10px; cursor: pointer; float: right; border-radius: 4px; }
+
+        /* Toast Notification */
+        .toast { visibility: hidden; min-width: 250px; background-color: #10b981; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 17px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
     </style>
 </head>
 <body>
@@ -85,7 +97,8 @@
                 <div class="sub-metric">Based on t2.micro pricing</div>
             </div>
 
-            <div class="card" style="border-left: 4px solid #8b5cf6;"> <h3>LIVE TRAFFIC</h3>
+            <div class="card" style="border-left: 4px solid #8b5cf6;"> 
+                <h3>LIVE TRAFFIC</h3>
                 <div class="metric">{{.RequestCount}}</div>
                 <div class="sub-metric">Total Requests Served</div>
             </div>
@@ -99,7 +112,10 @@
             <div class="card">
                 <h3>MEMORY USAGE</h3>
                 <div class="metric">{{.MemoryAlloc}}</div>
-                <div class="sub-metric">Active Allocation</div>
+                <div class="progress-container">
+                    <div class="progress-fill" style="width: {{.MemoryPercent}}%;"></div>
+                </div>
+                <div class="sub-metric">{{.MemoryPercent}}% of 1GB Limit</div>
             </div>
 
             <div class="card">
@@ -129,7 +145,17 @@
         </div>
     </div>
 
+    <div id="trafficToast" class="toast">🚀 Traffic Milestone Reached!</div>
+
     <script>
+        // 0. Traffic Milestone Check
+        const traffic = {{.RequestCount}};
+        if (traffic > 0 && traffic % 10 === 0) {
+            const x = document.getElementById("trafficToast");
+            x.className = "toast show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+
         // 1. Theme Toggle Logic
         function toggleTheme() {
             const body = document.body;
@@ -167,7 +193,7 @@
                     div.className = 'log-entry';
                     div.textContent = `> ${new Date().toLocaleTimeString()} ${log}`;
                     container.appendChild(div);
-                }, index * 200); // Stagger the logs for effect
+                }, index * 200); 
             });
         }
 

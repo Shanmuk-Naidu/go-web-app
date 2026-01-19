@@ -21,6 +21,7 @@ type PageData struct {
 	OS            string
 	Arch          string
 	MemoryAlloc   string
+	MemoryPercent int
 	NumGoroutine  int
 	NumCPU        int
 	Uptime        string
@@ -43,7 +44,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	duration := time.Since(startTime)
 	hours := duration.Hours()
 	cost := hours * 0.0116
-	
+
+	memMB := m.Alloc / 1024 / 1024
+	memPercent := int((float64(memMB) / 1024.0) * 100)
+
 	loc := time.FixedZone("IST", 5.5*60*60)
 
 	data := PageData{
@@ -51,7 +55,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		Hostname:      hostname,
 		OS:            runtime.GOOS,
 		Arch:          runtime.GOARCH,
-		MemoryAlloc:   fmt.Sprintf("%d MB", m.Alloc/1024/1024),
+		MemoryAlloc:   fmt.Sprintf("%d MB", memMB),
+		MemoryPercent: memPercent,
 		NumGoroutine:  runtime.NumGoroutine(),
 		NumCPU:        runtime.NumCPU(),
 		Uptime:        duration.Round(time.Second).String(),
@@ -69,9 +74,9 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	startTime = time.Now()
-	
+
 	http.HandleFunc("/", homeHandler)
-	
+
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
