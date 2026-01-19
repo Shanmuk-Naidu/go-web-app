@@ -6,10 +6,14 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"sync/atomic"
 	"time"
 )
 
-var startTime time.Time
+var (
+	startTime    time.Time
+	requestCount int64
+)
 
 type PageData struct {
 	Time          string
@@ -21,6 +25,7 @@ type PageData struct {
 	NumCPU        int
 	Uptime        string
 	EstimatedCost string
+	RequestCount  int64
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -29,21 +34,19 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	atomic.AddInt64(&requestCount, 1)
+
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-
 	hostname, _ := os.Hostname()
 
-	// Cost Calculation: t2.micro is approx $0.0116/hour
 	duration := time.Since(startTime)
 	hours := duration.Hours()
 	cost := hours * 0.0116
-
-	// FIX: Define the location BEFORE the struct
-	loc := time.FixedZone("IST", 5.5*60*60) // +5:30 offset
+	
+	loc := time.FixedZone("IST", 5.5*60*60)
 
 	data := PageData{
-		// FIX: Use .In(loc) to apply the timezone
 		Time:          time.Now().In(loc).Format("15:04:05 Mon, 02 Jan"),
 		Hostname:      hostname,
 		OS:            runtime.GOOS,
@@ -53,6 +56,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		NumCPU:        runtime.NumCPU(),
 		Uptime:        duration.Round(time.Second).String(),
 		EstimatedCost: fmt.Sprintf("$%.4f", cost),
+		RequestCount:  atomic.LoadInt64(&requestCount),
 	}
 
 	tmpl, err := template.ParseFiles("static/home.html")
@@ -65,9 +69,9 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	startTime = time.Now()
-
+	
 	http.HandleFunc("/", homeHandler)
-
+	
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
